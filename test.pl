@@ -18,3 +18,28 @@ print "ok 1\n";
 # (correspondingly "not ok 13") depending on the success of chunk 13
 # of the test code):
 
+@orig = ( 1 .. 16 );
+$size = 8;
+@new = Array::Reform->reform( $size, \@orig );
+if ( scalar @new == 2 ) {
+  print "ok 2\n";
+} else {
+  print "not ok 2\n";
+}
+
+$size = 4;
+@new = Array::Reform->reform( $size, \@orig );
+if ( scalar @new == 4 ) {
+  print "ok 3\n";
+} else {
+  print "not ok 3\n";
+}
+
+@orig = ( 1 .. 5 );
+$size = 2;
+@new = Array::Reform->reform( $size, \@orig );
+if ( $new[0][1] == 2 && $new[2][0] == 5 ) {
+  print "ok 4\n";
+} else {
+  print "not ok 4\n";
+}

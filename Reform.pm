@@ -3,24 +3,33 @@ package Array::Reform;
 use strict;
 use vars qw($VERSION @ISA @EXPORT @EXPORT_OK);
 
-use Carp qw( croak );
+use Carp;
 
 require Exporter;
 
-@ISA = qw(Exporter AutoLoader);
+our @ISA = qw(Exporter DynaLoader);
+
 # Items to export into callers namespace by default. Note: do not export
 # names by default without a very good reason. Use EXPORT_OK instead.
 # Do not simply export all your public functions/methods/constants.
-@EXPORT_OK = qw(
-	reform
-);
 
-$VERSION = '1.03';
+# This allows declaration	use Array::Reform ':all';
+# If you do not need this, moving things directly into @EXPORT or @EXPORT_OK
+# will save memory.
+our %EXPORT_TAGS = ( 'all' => [ qw(
+                                   reform
+                                   dissect
+                                  ) ] );
+
+our @EXPORT_OK = ( @{ $EXPORT_TAGS{'all'} } );
+
+our @EXPORT = qw();
+
+our $VERSION = '1.04';
 
 # Preloaded methods go here.
-sub reform ($$\@) {
-  my ($class, $size, $r_list) = @_;
-  croak "Invalid array size" if $size < 1;
+sub reform {
+  my ($size, $r_list) = &_validate_params;
 
   my @list = @{$r_list};
   my @lol;
@@ -30,9 +39,8 @@ sub reform ($$\@) {
   return wantarray ? @lol : \@lol;
 }
 
-sub dissect ($$\@) {
-  my ($class, $size, $r_list) = @_;
-  croak "Invalid array size" if $size < 1;
+sub dissect {
+  my ($size, $r_list) = &_validate_params;
 
   my @lol;
   my ($i, $j) = (0, 0);
@@ -42,7 +50,39 @@ sub dissect ($$\@) {
     $i = 0, $j++ unless (++$i % $size);
   }
 
-  return @lol;
+  return wantarray ? @lol : \@lol;
+}
+
+
+# Internal parameter validation function
+sub _validate_params {
+  # Check we've been called with at least one argument
+  Carp::croak( "Called with no arguments" ) if $#_ == -1;
+
+  # First param might be a class (if invoked as a class method). Discard it if so.
+  shift if $_[0] =~ /^[a-zA-Z0-9]+ (?: :: [a-zA-Z0-9]+ )$/x;
+
+  # Check we have at least 2 arguments remaining
+  Carp::croak( "Called with insufficient arguments" ) if( $#_ < 1 );
+
+  # Next argument is size. check it is a valid positive integer.
+  my $size = shift;
+  if( $size !~ /^+?\d+$/ ) {
+    Carp::croak( "Size '$size' is not a valid positive integer" );
+  } elsif( $size == 0 ) {
+    Carp::croak( "'$size' is an invalid array size" );
+  }
+
+  # If only one argument remains, check to see if it is an arrayref, otherwise, reate a reference to it
+  my $r_list;
+  if( ($#_ == 0) &&
+      (ref($_[0]) eq 'ARRAY') ) {
+    $r_list = $_[0];
+  } else {
+    $r_list = \@_;
+  }
+
+  return $size, $r_list;
 }
 
 # Autoload methods go after =cut, and are processed by the autosplit program.
@@ -53,16 +93,16 @@ __END__
 
 =head1 NAME
 
-Array::Reform - Convert an array into N-sized array of arrays
+Array::Reform - Convert an array into N-sized array of arrays.
 
 =head1 SYNOPSIS
 
-  use Array::Reform;
+  use Array::Reform qw( :all );
 
   @sample = ( 1 .. 10 );
   $rowsize = 3;
 
-  Array::Reform->reform( $rowsize, \@sample );
+  reform( $rowsize, @sample );
       =>
          (
             [   1,   2,   3   ],
@@ -71,7 +111,7 @@ Array::Reform - Convert an array into N-sized array of arrays
             [   10   ]
           );
 
-  Array::Reform->dissect( $rowsize, \@sample );
+  dissect( $rowsize, @sample );
       =>
          (
             [   1,   5,   9   ],
@@ -87,22 +127,25 @@ Both these methods are designed to reformat a list into a list of
 lists. It is often used for formatting data into HTML tables, amongst
 other things.
 
-The key difference between the two methods is that T<dissect()> takes
+The key difference between the two methods is that C<dissect()> takes
 elements from the start of the list provided and pushes them onto each
 of the subarrays sequentially, rather than simply dividing the list
 into discrete chunks.
-As a result T<dissect()> returns a list of lists where the first
+As a result C<dissect()> returns a list of lists where the first
 element of each sublist will be one of the first elements of the
 source list, and the last element will be one of the last.
 This behaviour is much more useful when the input list is sorted.
 
+Both methods can be called as either functions or class methods (to
+ensure compatibility with previous releases), and the array to be
+reformed can be passed as a reference.
+
 =head1 AUTHOR
 
-The original code was written by the Perl Monks user L<lhoward|LHOWARD>, with
-contributions by adam, swiftone, and crystalflame. It was uploaded by
-L<princepawn|TBONE>.
+The original code was written by the Perl Monks user lhoward, with
+contributions by adam, swiftone, and crystalflame.
 
-This version was written by L<kilinrax|KILINRAX>, with contributions from L<davorg|DAVECROSS>.
+This version was written by kilinrax, with contributions from davorg.
 
 =head1 SEE ALSO
 

@@ -1,45 +1,43 @@
 # Before `make install' is performed this script should be runnable with
 # `make test'. After `make install' it should work as `perl test.pl'
 
-######################### We start with some black magic to print on failure.
+#########################
 
-# Change 1..1 below to 1..last_test_to_print .
-# (It may become useful if the test is moved to ./t subdirectory.)
+# change 'tests => 1' to 'tests => last_test_to_print';
 
-BEGIN { $| = 1; print "1..4\n"; }
-END {print "not ok 1\n" unless $loaded;}
+use Test;
+BEGIN { plan tests => 7 };
 use Array::Reform;
-$loaded = 1;
-print "ok 1\n";
+ok(1); # If we made it this far, we're ok.
 
-######################### End of black magic.
+#########################
 
-# Insert your test code below (better if it prints "ok 13"
-# (correspondingly "not ok 13") depending on the success of chunk 13
-# of the test code):
+# Insert your test code below, the Test module is use()ed here so read
+# its man page ( perldoc Test ) for help writing this test script.
+
+use vars qw( @orig $size @new $new );
 
 @orig = ( 1 .. 16 );
 $size = 8;
 @new = Array::Reform->reform( $size, \@orig );
-if ( scalar @new == 2 ) {
-  print "ok 2\n";
-} else {
-  print "not ok 2\n";
-}
+ok( scalar @new == 2 );
 
 $size = 4;
-@new = Array::Reform->reform( $size, \@orig );
-if ( scalar @new == 4 ) {
-  print "ok 3\n";
-} else {
-  print "not ok 3\n";
-}
+$new = Array::Reform->reform( $size, \@orig );
+ok( scalar @$new == 4 );
+
+$size = 5;
+@new = Array::Reform->dissect( $size, \@orig );
+ok( scalar @new == 5 );
 
 @orig = ( 1 .. 5 );
 $size = 2;
 @new = Array::Reform->reform( $size, \@orig );
-if ( $new[0][1] == 2 && $new[2][0] == 5 ) {
-  print "ok 4\n";
-} else {
-  print "not ok 4\n";
-}
+ok( $new[0][1] == 2 && $new[2][0] == 5 );
+
+@new = Array::Reform->dissect( $size, \@orig );
+ok( $new[1][0] == 2 && $new[0][1] == 3 );
+
+$size = 3;
+@new = Array::Reform->dissect( $size, \@orig );
+ok( $new[0][1] == 4 && $new[2][0] == 3 );

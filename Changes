@@ -7,3 +7,6 @@ Revision history for Perl extension Array::Reform.
 	- added tests, changed to pass array ref, some error checking.
 	  (crystalflame at perlmonks)
 
+1.03  Thu May 22 18:33:57 2003
+        - rewrote reform, added dissect, updated tests and docs
+         (kilinrax).
